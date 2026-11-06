@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Digital Library Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2f1;--surface:#fff;--ink:#14232b;--muted:#5b6b73;--line:#d3dcdb;--brand:#12495a;--brand-ink:#fff;--accent:#c58b12;--ok:#1f7a4d;--warn:#b3261e;--okbg:#e1f2e9;--warnbg:#fbe5e3;--outbg:#fdf0d2;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1a1f;--surface:#15262d;--ink:#e6eef0;--muted:#92a5ac;--line:#28404a;--brand:#5cb6cf;--brand-ink:#0b1a20;--accent:#e3ac3a;--ok:#6fd1a0;--warn:#ff8a80;--okbg:#17372a;--warnbg:#402220;--outbg:#3b3014}}
+:root[data-theme="dark"]{--bg:#0e1a1f;--surface:#15262d;--ink:#e6eef0;--muted:#92a5ac;--line:#28404a;--brand:#5cb6cf;--brand-ink:#0b1a20;--accent:#e3ac3a;--ok:#6fd1a0;--warn:#ff8a80;--okbg:#17372a;--warnbg:#402220;--outbg:#3b3014}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Source Serif 4",Georgia,serif}
+h1,h2,h3,button,input,select,label,th,.tag{font-family:"Bricolage Grotesque",system-ui,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:20px}
+h1{font-size:1.8rem;margin:0;letter-spacing:-.02em}
+h1 small{display:block;font:400 .95rem "Source Serif 4",serif;color:var(--muted);letter-spacing:0}
+button{cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;border-radius:8px;font-size:.9rem;font-weight:500}
+button:hover{border-color:var(--brand)}
+button.primary{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+button.danger{color:var(--warn)}
+button.sm{padding:5px 10px;font-size:.8rem}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.stat b{display:block;font:700 1.9rem "Bricolage Grotesque",sans-serif;line-height:1.1}
+.stat span{color:var(--muted);font-size:.9rem}
+.stat.alert b{color:var(--warn)}
+.bar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+.bar input,.bar select,dialog input,dialog select{padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font-size:.95rem;width:100%}
+.bar input{flex:1 1 240px;width:auto}
+.bar select{flex:0 1 170px;width:auto}
+.tablebox{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:720px}
+th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.85rem;color:var(--muted);font-weight:500}
+tr:last-child td{border-bottom:0}
+td .title{font-weight:600;font-size:1.02rem}
+td .sub{color:var(--muted);font-size:.88rem}
+.tag{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.78rem;font-weight:700}
+.tag.in{background:var(--okbg);color:var(--ok)}
+.tag.out{background:var(--outbg);color:var(--accent)}
+.tag.late{background:var(--warnbg);color:var(--warn)}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.empty{padding:36px 16px;text-align:center;color:var(--muted)}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);width:min(440px,92vw);padding:22px}
+dialog::backdrop{background:rgba(5,15,20,.55)}
+dialog h2{margin:0 0 14px;font-size:1.25rem}
+dialog label{display:block;font-size:.85rem;font-weight:500;margin:10px 0 4px}
+.row{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:8px;font:500 .9rem "Bricolage Grotesque",sans-serif;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:1}
+.tabs{display:flex;gap:6px;margin-bottom:16px;border-bottom:1px solid var(--line)}
+.tabs button{border:0;border-bottom:3px solid transparent;border-radius:0;background:none;padding:10px 14px;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.panel[hidden],#login[hidden]{display:none}
+.chart{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:20px}
+.chart h3{margin:0 0 8px;font-size:1rem}
+.crow{display:grid;grid-template-columns:110px 1fr 28px;gap:10px;align-items:center;font-size:.9rem;margin:6px 0}
+.cbar{height:12px;border-radius:6px;background:var(--brand)}
+#login{position:fixed;inset:0;background:var(--bg);display:grid;place-items:center;z-index:50;padding:16px}
+#login form{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:26px;width:min(380px,100%)}
+#login label{display:block;font-size:.85rem;font-weight:500}
+#login input{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);margin:4px 0 12px}
+.hint{color:var(--muted);font-size:.85rem;margin:8px 0 0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Digital Library Manager<small>Track books, lend them out, and see what’s overdue.</small></h1>
+    <div class="acts">
+      <button id="logoutBtn">Sign out</button>
+      <button id="themeBtn" aria-label="Toggle light or dark theme">Theme</button>
+      <button class="primary" id="addBtn">Add book</button>
+    </div>
+  </header>
+
+  <section class="stats" aria-label="Library summary">
+    <div class="stat"><b id="sTotal">0</b><span>Titles</span></div>
+    <div class="stat"><b id="sIn">0</b><span>On the shelf</span></div>
+    <div class="stat"><b id="sOut">0</b><span>Checked out</span></div>
+    <div class="stat alert"><b id="sLate">0</b><span>Overdue</span></div>
+  </section>
+
+  <div class="chart"><h3>Books per category</h3><div id="chartRows"></div></div>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" data-p="books" aria-selected="true">Books</button>
+    <button role="tab" data-p="members" aria-selected="false">Members</button>
+    <button role="tab" data-p="hist" aria-selected="false">History</button>
+  </div>
+
+  <div class="panel" id="p-books">
+  <div class="bar">
+    <input id="q" type="search" placeholder="Search by title, author, or ISBN" aria-label="Search books">
+    <select id="cat" aria-label="Filter by category"></select>
+    <select id="stat" aria-label="Filter by status">
+      <option value="">All statuses</option><option value="in">On the shelf</option><option value="out">Checked out</option><option value="late">Overdue</option>
+    </select>
+  </div>
+
+  <div class="tablebox">
+    <table>
+      <thead><tr><th>Book</th><th>Category</th><th>Status</th><th>Borrower</th><th>Actions</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div id="empty" class="empty" hidden>No books match. Clear the filters or add a new book.</div>
+  </div>
+  </div>
+
+  <div class="panel" id="p-members" hidden><div class="tablebox"><table style="min-width:420px"><thead><tr><th>Member</th><th>Books now</th><th>Total borrowed</th></tr></thead><tbody id="memRows"></tbody></table></div></div>
+
+  <div class="panel" id="p-hist" hidden><div class="tablebox"><table><thead><tr><th>Date</th><th>Action</th><th>Book</th><th>Member</th></tr></thead><tbody id="histRows"></tbody></table></div></div>
+</div>
+
+<dialog id="bookDlg">
+  <form method="dialog" id="bookForm">
+    <h2 id="bookTitle">Add book</h2>
+    <label for="fTitle">Title</label><input id="fTitle" required>
+    <label for="fAuthor">Author</label><input id="fAuthor" required>
+    <label for="fIsbn">ISBN</label><input id="fIsbn">
+    <label for="fCat">Category</label>
+    <input id="fCat" list="cats" required><datalist id="cats"></datalist>
+    <div class="row"><button type="button" id="bookCancel">Cancel</button><button class="primary" type="submit">Save book</button></div>
+  </form>
+</dialog>
+
+<dialog id="lendDlg">
+  <form method="dialog" id="lendForm">
+    <h2>Check out book</h2>
+    <p id="lendName" style="margin:0;color:var(--muted)"></p>
+    <label for="fMember">Borrower name</label><input id="fMember" required>
+    <label for="fDue">Due date</label><input id="fDue" type="date" required>
+    <div class="row"><button type="button" id="lendCancel">Cancel</button><button class="primary" type="submit">Check out</button></div>
+  </form>
+</dialog>
+
+<div id="login"><form id="loginForm"><h1>Digital Library Manager<small>Librarian sign in</small></h1><br><label for="lu">Username</label><input id="lu" autocomplete="username" required><label for="lp">Password</label><input id="lp" type="password" autocomplete="current-password" required><p id="lerr" class="hint" role="alert" style="color:var(--warn)"></p><button class="primary" style="width:100%;margin-top:8px">Sign in</button><p class="hint">Demo login: admin / admin123</p></form></div>
+
+<div id="toast" role="status"></div>
+
+<script>
+(function(){
+  var KEY="dlm-books-v1", THEME="dlm-theme";
+  var today=function(){return new Date().toISOString().slice(0,10)};
+  var plus=function(d){var x=new Date();x.setDate(x.getDate()+d);return x.toISOString().slice(0,10)};
+  var seed=[
+    {id:1,title:"The Pragmatic Programmer",author:"Andrew Hunt, David Thomas",isbn:"9780135957059",cat:"Technology",borrower:"",due:""},
+    {id:2,title:"Sapiens",author:"Yuval Noah Harari",isbn:"9780062316097",cat:"History",borrower:"Simran Kaur",due:plus(6)},
+    {id:3,title:"Godaan",author:"Premchand",isbn:"9788171672813",cat:"Fiction",borrower:"",due:""},
+    {id:4,title:"A Brief History of Time",author:"Stephen Hawking",isbn:"9780553380163",cat:"Science",borrower:"Arjun Mehta",due:plus(-4)},
+    {id:5,title:"Clean Code",author:"Robert C. Martin",isbn:"9780132350884",cat:"Technology",borrower:"",due:""},
+    {id:6,title:"Train to Pakistan",author:"Khushwant Singh",isbn:"9780143065883",cat:"Fiction",borrower:"Harpreet Singh",due:plus(2)},
+    {id:7,title:"Cosmos",author:"Carl Sagan",isbn:"9780345539434",cat:"Science",borrower:"",due:""}
+  ];
+  var books;
+  try{var raw=localStorage.getItem(KEY);books=raw?JSON.parse(raw):null}catch(e){books=null}
+  if(!Array.isArray(books))books=seed;
+  var editId=null,lendId=null;
+  var hist;try{hist=JSON.parse(localStorage.getItem("dlm-hist-v1"))}catch(e){}
+  if(!Array.isArray(hist))hist=[{t:plus(-5),type:"Checked out",book:"Train to Pakistan",who:"Harpreet Singh"},{t:plus(-10),type:"Checked out",book:"Sapiens",who:"Simran Kaur"},{t:plus(-14),type:"Checked out",book:"A Brief History of Time",who:"Arjun Mehta"}];
+  function log(type,book,who){hist.unshift({t:today(),type:type,book:book,who:who||""})}
+  var $=function(i){return document.getElementById(i)};
+
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(books));localStorage.setItem("dlm-hist-v1",JSON.stringify(hist.slice(0,200)))}catch(e){}}
+  function status(b){return !b.borrower?"in":(b.due<today()?"late":"out")}
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+  function toast(m){var t=$("toast");t.textContent=m;t.className="show";clearTimeout(toast.t);toast.t=setTimeout(function(){t.className=""},2200)}
+
+  function cats(){var s={};books.forEach(function(b){s[b.cat]=1});return Object.keys(s).sort()}
+  function renderFilters(){
+    var cur=$("cat").value;
+    $("cat").innerHTML='<option value="">All categories</option>'+cats().map(function(c){return'<option>'+esc(c)+'</option>'}).join("");
+    $("cat").value=cats().indexOf(cur)>-1?cur:"";
+    $("cats").innerHTML=cats().map(function(c){return'<option value="'+esc(c)+'">'}).join("");
+  }
+  function render(){
+    var q=$("q").value.trim().toLowerCase(),c=$("cat").value,s=$("stat").value;
+    var list=books.filter(function(b){
+      var hit=!q||(b.title+" "+b.author+" "+b.isbn).toLowerCase().indexOf(q)>-1;
+      return hit&&(!c||b.cat===c)&&(!s||status(b)===s);
+    });
+    $("rows").innerHTML=list.map(function(b){
+      var st=status(b),label={in:"On the shelf",out:"Checked out",late:"Overdue"}[st];
+      var who=b.borrower?esc(b.borrower)+'<div class="sub">Due '+esc(b.due)+(st==="late"?' · fine ₹'+Math.round((new Date(today())-new Date(b.due))/864e5)*2:'')+'</div>':'<span class="sub">None</span>';
+      var act=(b.borrower?'<button class="sm" data-a="return" data-id="'+b.id+'">Return</button>':'<button class="sm" data-a="lend" data-id="'+b.id+'">Check out</button>')
+        +'<button class="sm" data-a="edit" data-id="'+b.id+'">Edit</button><button class="sm danger" data-a="del" data-id="'+b.id+'">Delete</button>';
+      return'<tr><td><div class="title">'+esc(b.title)+'</div><div class="sub">'+esc(b.author)+(b.isbn?' · ISBN '+esc(b.isbn):'')+'</div></td><td>'+esc(b.cat)+'</td><td><span class="tag '+st+'">'+label+'</span></td><td>'+who+'</td><td><div class="acts">'+act+'</div></td></tr>';
+    }).join("");
+    $("empty").hidden=list.length>0;
+    var late=books.filter(function(b){return status(b)==="late"}).length,out=books.filter(function(b){return b.borrower}).length;
+    $("sTotal").textContent=books.length;$("sOut").textContent=out;$("sIn").textContent=books.length-out;$("sLate").textContent=late;
+  }
+  function extras(){
+    var m={},cs={};
+    books.forEach(function(b){cs[b.cat]=(cs[b.cat]||0)+1});
+    var mx=Math.max.apply(null,Object.keys(cs).map(function(k){return cs[k]}).concat(1));
+    $("chartRows").innerHTML=Object.keys(cs).sort().map(function(k){return'<div class="crow"><span>'+esc(k)+'</span><div class="cbar" style="width:'+(cs[k]/mx*100)+'%"></div><b>'+cs[k]+'</b></div>'}).join("");
+    hist.forEach(function(h){if(h.who&&h.type==="Checked out"){var x=m[h.who]=m[h.who]||{n:0,a:0};x.n++}});
+    books.forEach(function(b){if(b.borrower){var x=m[b.borrower]=m[b.borrower]||{n:0,a:0};x.a++}});
+    $("memRows").innerHTML=Object.keys(m).sort().map(function(k){return'<tr><td>'+esc(k)+'</td><td>'+m[k].a+'</td><td>'+m[k].n+'</td></tr>'}).join("")||'<tr><td colspan="3" class="sub">No borrowers yet.</td></tr>';
+    $("histRows").innerHTML=hist.slice(0,50).map(function(h){return'<tr><td>'+esc(h.t)+'</td><td>'+esc(h.type)+'</td><td>'+esc(h.book)+'</td><td>'+esc(h.who)+'</td></tr>'}).join("");
+  }
+  function refresh(){save();renderFilters();render();extras()}
+
+  $("rows").addEventListener("click",function(e){
+    var btn=e.target.closest("button");if(!btn)return;
+    var id=+btn.dataset.id,b=books.filter(function(x){return x.id===id})[0],a=btn.dataset.a;
+    if(a==="return"){log("Returned",b.title,b.borrower);b.borrower="";b.due="";refresh();toast("Returned “"+b.title+"”")}
+    else if(a==="del"){if(confirm("Delete “"+b.title+"” from the library?")){books=books.filter(function(x){return x.id!==id});refresh();toast("Book deleted")}}
+    else if(a==="edit"){editId=id;$("bookTitle").textContent="Edit book";$("fTitle").value=b.title;$("fAuthor").value=b.author;$("fIsbn").value=b.isbn;$("fCat").value=b.cat;$("bookDlg").showModal()}
+    else if(a==="lend"){lendId=id;$("lendName").textContent=b.title;$("fMember").value="";$("fDue").value=plus(14);$("fDue").min=today();$("lendDlg").showModal()}
+  });
+  $("addBtn").onclick=function(){editId=null;$("bookForm").reset();$("bookTitle").textContent="Add book";$("bookDlg").showModal()};
+  $("bookCancel").onclick=function(){$("bookDlg").close()};
+  $("lendCancel").onclick=function(){$("lendDlg").close()};
+  $("bookForm").addEventListener("submit",function(){
+    var d={title:$("fTitle").value.trim(),author:$("fAuthor").value.trim(),isbn:$("fIsbn").value.trim(),cat:$("fCat").value.trim()};
+    if(editId){var b=books.filter(function(x){return x.id===editId})[0];Object.assign(b,d);toast("Book updated")}
+    else{d.id=Date.now();d.borrower="";d.due="";books.unshift(d);log("Added",d.title);toast("Book added")}
+    refresh();
+  });
+  $("lendForm").addEventListener("submit",function(){
+    var b=books.filter(function(x){return x.id===lendId})[0];
+    b.borrower=$("fMember").value.trim();b.due=$("fDue").value;log("Checked out",b.title,b.borrower);refresh();toast("Checked out to "+b.borrower);
+  });
+  ["q","cat","stat"].forEach(function(i){$(i).addEventListener("input",render)});
+
+  document.querySelectorAll(".tabs button").forEach(function(t){t.onclick=function(){
+    document.querySelectorAll(".tabs button").forEach(function(x){x.setAttribute("aria-selected",x===t)});
+    ["books","members","hist"].forEach(function(n){$("p-"+n).hidden=n!==t.dataset.p});
+  }});
+  try{if(sessionStorage.getItem("dlm-auth")==="1")$("login").hidden=true}catch(e){}
+  $("loginForm").addEventListener("submit",function(e){e.preventDefault();
+    if($("lu").value==="admin"&&$("lp").value==="admin123"){try{sessionStorage.setItem("dlm-auth","1")}catch(x){}$("lerr").textContent="";$("login").hidden=true}
+    else $("lerr").textContent="Wrong username or password. Use the demo login below.";
+  });
+  $("logoutBtn").onclick=function(){try{sessionStorage.removeItem("dlm-auth")}catch(e){}$("lp").value="";$("login").hidden=false};
+  $("themeBtn").onclick=function(){
+    var cur=document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");
+    var next=cur==="dark"?"light":"dark";document.documentElement.setAttribute("data-theme",next);
+    try{localStorage.setItem(THEME,next)}catch(e){}
+  };
+  try{var t=localStorage.getItem(THEME);if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}
+  refresh();
+})();
+</script>
+</body>
+</html>
